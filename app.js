@@ -32,8 +32,8 @@ const deleteTask = (taskId) => {
 const toggleTaskComplete = (taskId) => {
   const checkbox = $(`#completeButton${taskId}`);
   const newCompletedState = !checkbox.prop('checked');
+  const currentFilter = $('.active').attr('id').replace('TasksToggle', ''); // Get active filter
 
-  // Disable the checkbox while the request is in progress
   checkbox.prop('disabled', true);
 
   ajaxRequest({
@@ -41,12 +41,17 @@ const toggleTaskComplete = (taskId) => {
     url: `${API_ENDPOINT}/${taskId}/${newCompletedState ? 'mark_complete' : 'mark_active'}?api_key=${API_KEY}`,
     success: () => {
       handleToggleCompleteSuccess(taskId, newCompletedState);
-      checkbox.prop('disabled', false); // Re-enable after the request
+      checkbox.prop('disabled', false);
+
+      // Remove task from DOM if filter doesn't match new state
+      if ((currentFilter === 'active' && newCompletedState) || (currentFilter === 'completed' && !newCompletedState)) {
+        $(`#taskDiv${taskId}`).remove();
+      }
     },
     error: (error) => {
       handleError(error);
-      checkbox.prop('checked', !newCompletedState); // Revert to the original state on error
-      checkbox.prop('disabled', false); 
+      checkbox.prop('checked', !newCompletedState);
+      checkbox.prop('disabled', false);
     },
   });
 };
@@ -117,17 +122,38 @@ const addTask = (event) => {
 
 taskNameInput.on('keydown', addTask);
 
-// Load existing tasks on page load
-$(document).ready(() => {
+// ----- Task Filtering Logic -----
+
+const loadFilteredTasks = (filter) => {
+  // Remove 'active' class from all buttons
+  $('#allTasksToggle, #activeTasksToggle, #completedTasksToggle').removeClass('active');
+
+  // Add 'active' class to the clicked button
+  $(`#${filter}TasksToggle`).addClass('active');
+
+  taskList.empty();
+
   ajaxRequest({
     type: 'GET',
     url: `${API_ENDPOINT}?api_key=${API_KEY}`,
     success: (response) => {
       response.tasks.forEach((task) => {
-        const taskDiv = createTaskElement(task.content, task.id, task.completed);
-        taskList.append(taskDiv);
+        if (filter === 'all' || (filter === 'active' && !task.completed) || (filter === 'completed' && task.completed)) {
+          const taskDiv = createTaskElement(task.content, task.id, task.completed);
+          taskList.append(taskDiv);
+        }
       });
     },
     error: handleError,
   });
+};
+
+$('#allTasksToggle').on('click', () => loadFilteredTasks('all'));
+$('#activeTasksToggle').on('click', () => loadFilteredTasks('active'));
+$('#completedTasksToggle').on('click', () => loadFilteredTasks('completed'));
+
+// Load all tasks on page load
+$(document).ready(() => {
+  loadFilteredTasks('all'); 
+  $('#allTasksToggle').addClass('active'); 
 });
