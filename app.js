@@ -4,6 +4,7 @@ const API_KEY = '1264';
 const taskNameInput = $('#taskNameInput');
 const taskList = $('#taskList');
 
+// ----- AJAX Utility Function -----
 const ajaxRequest = (options) => {
   $.ajax({
     type: options.type,
@@ -16,20 +17,9 @@ const ajaxRequest = (options) => {
   });
 };
 
-const handleDeleteSuccess = (taskId, response) => {
-  console.log(response);
-  $(`#taskDiv${taskId}`).remove();
-};
+// ----- Task Handling Functions -----
 
-const handleCompleteSuccess = (taskId, response) => {
-  console.log(response);
-  $(`#taskDiv${taskId}`).css('text-decoration', 'line-through');
-};
-
-const handleError = (errorMessage) => {
-  console.log(errorMessage);
-};
-
+// Delete a task
 const deleteTask = (taskId) => {
   ajaxRequest({
     type: 'DELETE',
@@ -39,6 +29,7 @@ const deleteTask = (taskId) => {
   });
 };
 
+// Mark a task as complete
 const completeTask = (taskId) => {
   ajaxRequest({
     type: 'PUT',
@@ -48,22 +39,52 @@ const completeTask = (taskId) => {
   });
 };
 
+// ----- Task Element Creation -----
+
+// Create a task div
 const createTaskElement = (task, taskId) => {
   const taskDiv = $('<div>').attr('id', `taskDiv${taskId}`).addClass('taskDiv');
-  const taskContent = $('<li>').text(task).attr('id', 'taskContent');
-  const deleteButton = $('<button>').text('Delete').attr('id', 'deleteButton').addClass('btn btn-danger');
+  const taskContent = $('<li>').text(task).attr('id', 'taskContent').addClass('taskContent');
+  const deleteButton = $('<button>').text('X').attr('id', 'deleteButton').addClass('deleteButton');
+
+  // Create a wrapper for checkbox and task content
+  const taskContentWrapper = $('<div>').addClass('task-content-wrapper');
+  
+  // Custom checkbox creation
   const completeButton = $('<label>').addClass('custom-checkbox-container');
   const checkboxInput = $('<input>').attr('type', 'checkbox').attr('id', `completeButton${taskId}`);
   const checkmarkSpan = $('<span>').addClass('custom-checkmark');
   completeButton.append(checkboxInput, checkmarkSpan);
+  taskContentWrapper.append(completeButton, taskContent); // Add checkbox and content to wrapper
 
+  // Event listeners for buttons
   completeButton.on('click', () => completeTask(taskId));
   deleteButton.on('click', () => deleteTask(taskId));
 
-  taskDiv.append(completeButton, taskContent, deleteButton);
+  taskDiv.append(taskContentWrapper, deleteButton); // Append wrapper and button to taskDiv
   return taskDiv;
 };
 
+// ----- Event Handlers -----
+
+// Handle task deletion success
+const handleDeleteSuccess = (taskId, response) => {
+  console.log(response);
+  $(`#taskDiv${taskId}`).remove();
+};
+
+// Handle task completion success
+const handleCompleteSuccess = (taskId, response) => {
+  console.log(response);
+  $(`#taskDiv${taskId}`).css('text-decoration', 'line-through');
+};
+
+// Handle errors during API calls
+const handleError = (errorMessage) => {
+  console.log(errorMessage);
+};
+
+// Handle successful task addition
 const handleAddTaskSuccess = (response) => {
   console.log(response);
   const taskId = response.task.id;
@@ -72,6 +93,7 @@ const handleAddTaskSuccess = (response) => {
   taskNameInput.val('');
 };
 
+// Add a task when Enter key is pressed
 const addTask = (event) => {
   if (event.key === 'Enter') {
     const task = taskNameInput.val();
@@ -86,9 +108,8 @@ const addTask = (event) => {
       success: handleAddTaskSuccess,
       error: handleError,
     });
-  } else {
-    console.log('Not the Enter key');
   }
 };
 
+// Event listener for adding tasks
 taskNameInput.on('keydown', addTask);
