@@ -1,0 +1,80 @@
+/* Container Styling */
+.container-fluid {
+  max-width: 800px;
+  border: 1px solid black;
+}
+
+/* List Styling */
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Task Item Styling */
+.taskDiv {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 10px;
+  border-bottom: 1px solid black;
+}
+
+/* Custom Checkbox Styling */
+.custom-checkbox-container {
+  display: block;
+  position: relative;
+  padding-left: 35px;
+  margin-bottom: 35px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.custom-checkbox-container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.custom-checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 40px;
+  width: 40px;
+  background-color: #eee;
+}
+
+.custom-checkbox-container:hover input~.custom-checkmark {
+  background-color: #ccc;
+}
+
+.custom-checkbox-container input:checked~.custom-checkmark {
+  background-color: #2196F3;
+}
+
+.custom-checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.custom-checkbox-container input:checked~.custom-checkmark:after {
+  display: block;
+}
+
+.custom-checkbox-container .custom-checkmark:after {
+  left: 15px;
+  top: 7px;
+  width: 10px;
+  height: 20px;
+  border: solid white;
+  border-width: 0 3px 3px 0;
+  -webkit-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  transform: rotate(45deg);
+}
