@@ -5,6 +5,7 @@ const taskNameInput = $('#taskNameInput');
 const taskList = $('#taskList');
 
 // ----- AJAX Utility Function -----
+
 const ajaxRequest = (options) => {
   $.ajax({
     type: options.type,
@@ -19,88 +20,91 @@ const ajaxRequest = (options) => {
 
 // ----- Task Handling Functions -----
 
-// Delete a task
 const deleteTask = (taskId) => {
   ajaxRequest({
     type: 'DELETE',
     url: `${API_ENDPOINT}/${taskId}?api_key=${API_KEY}`,
-    success: (response) => handleDeleteSuccess(taskId, response),
+    success: () => handleDeleteSuccess(taskId),
     error: handleError,
   });
 };
 
-// Mark a task as complete
-const completeTask = (taskId) => {
+const toggleTaskComplete = (taskId) => {
+  const checkbox = $(`#completeButton${taskId}`);
+  const newCompletedState = !checkbox.prop('checked');
+
+  // Disable the checkbox while the request is in progress
+  checkbox.prop('disabled', true);
+
   ajaxRequest({
     type: 'PUT',
-    url: `${API_ENDPOINT}/${taskId}/mark_complete?api_key=${API_KEY}`,
-    success: (response) => handleCompleteSuccess(taskId, response),
-    error: handleError,
+    url: `${API_ENDPOINT}/${taskId}/${newCompletedState ? 'mark_complete' : 'mark_active'}?api_key=${API_KEY}`,
+    success: () => {
+      handleToggleCompleteSuccess(taskId, newCompletedState);
+      checkbox.prop('disabled', false); // Re-enable after the request
+    },
+    error: (error) => {
+      handleError(error);
+      checkbox.prop('checked', !newCompletedState); // Revert to the original state on error
+      checkbox.prop('disabled', false); 
+    },
   });
+};
+
+// ----- UI Update Functions -----
+
+const handleDeleteSuccess = (taskId) => {
+  $(`#taskDiv${taskId}`).remove();
+};
+
+const handleToggleCompleteSuccess = (taskId, completed) => {
+  $(`#taskContent${taskId}`).css('text-decoration', completed ? 'line-through' : 'none');
+  $(`#completeButton${taskId}`).prop('checked', completed); 
+};
+
+const handleError = (errorMessage) => {
+  console.log(errorMessage);
 };
 
 // ----- Task Element Creation -----
 
-// Create a task div
-const createTaskElement = (task, taskId) => {
+const createTaskElement = (task, taskId, completed) => {
   const taskDiv = $('<div>').attr('id', `taskDiv${taskId}`).addClass('taskDiv');
-  const taskContent = $('<li>').text(task).attr('id', 'taskContent').addClass('taskContent');
+  const taskContent = $('<li>').text(task).attr('id', `taskContent${taskId}`).addClass('taskContent');
   const deleteButton = $('<button>').text('X').attr('id', 'deleteButton').addClass('deleteButton');
 
-  // Create a wrapper for checkbox and task content
   const taskContentWrapper = $('<div>').addClass('task-content-wrapper');
-  
-  // Custom checkbox creation
+
   const completeButton = $('<label>').addClass('custom-checkbox-container');
   const checkboxInput = $('<input>').attr('type', 'checkbox').attr('id', `completeButton${taskId}`);
   const checkmarkSpan = $('<span>').addClass('custom-checkmark');
   completeButton.append(checkboxInput, checkmarkSpan);
-  taskContentWrapper.append(completeButton, taskContent); // Add checkbox and content to wrapper
+  taskContentWrapper.append(completeButton, taskContent);
 
-  // Event listeners for buttons
-  completeButton.on('click', () => completeTask(taskId));
+  // Set initial checkbox and text state based on "completed"
+  checkboxInput.prop('checked', completed);
+  taskContent.css('text-decoration', completed ? 'line-through' : 'none');
+
+  completeButton.on('click', () => toggleTaskComplete(taskId));
   deleteButton.on('click', () => deleteTask(taskId));
 
-  taskDiv.append(taskContentWrapper, deleteButton); // Append wrapper and button to taskDiv
+  taskDiv.append(taskContentWrapper, deleteButton);
   return taskDiv;
 };
 
 // ----- Event Handlers -----
 
-// Handle task deletion success
-const handleDeleteSuccess = (taskId, response) => {
-  console.log(response);
-  $(`#taskDiv${taskId}`).remove();
-};
-
-// Handle task completion success
-const handleCompleteSuccess = (taskId, response) => {
-  console.log(response);
-  $(`#taskDiv${taskId}`).css('text-decoration', 'line-through');
-};
-
-// Handle errors during API calls
-const handleError = (errorMessage) => {
-  console.log(errorMessage);
-};
-
-// Handle successful task addition
 const handleAddTaskSuccess = (response) => {
-  console.log(response);
   const taskId = response.task.id;
-  const taskDiv = createTaskElement(taskNameInput.val(), taskId);
+  const taskDiv = createTaskElement(taskNameInput.val(), taskId, false);
   taskList.append(taskDiv);
   taskNameInput.val('');
 };
 
-// Add a task when Enter key is pressed
 const addTask = (event) => {
   if (event.key === 'Enter') {
     const task = taskNameInput.val();
-    if (task.trim() === '') {
-      console.log('Task name cannot be empty');
-      return;
-    }
+    if (task.trim() === '') return;
     ajaxRequest({
       type: 'POST',
       url: `${API_ENDPOINT}?api_key=${API_KEY}`,
@@ -111,5 +115,19 @@ const addTask = (event) => {
   }
 };
 
-// Event listener for adding tasks
 taskNameInput.on('keydown', addTask);
+
+// Load existing tasks on page load
+$(document).ready(() => {
+  ajaxRequest({
+    type: 'GET',
+    url: `${API_ENDPOINT}?api_key=${API_KEY}`,
+    success: (response) => {
+      response.tasks.forEach((task) => {
+        const taskDiv = createTaskElement(task.content, task.id, task.completed);
+        taskList.append(taskDiv);
+      });
+    },
+    error: handleError,
+  });
+});
