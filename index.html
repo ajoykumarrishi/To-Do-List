@@ -17,10 +17,13 @@
 <body>
   <h1 class="text-center mt-5">To-Do App</h1>
   <div class="container-fluid">
+    <div class="toggle d-flex justify-content-between">
+      <button id="allTasksToggle" class="btn btn-primary active">All Tasks</button>
+      <button id="activeTasksToggle" class="btn btn-primary">Active Tasks</button>
+      <button id="completedTasksToggle" class="btn btn-primary">Completed Tasks</button>
+    </div>
     <input id="taskNameInput" type="text" placeholder="What do you need to do?">
     <ul id="taskList"></ul>
-    
-    
   </div>
   <!--- app.js -->
   <script src="app.js"></script>

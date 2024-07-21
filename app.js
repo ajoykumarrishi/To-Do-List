@@ -119,6 +119,19 @@ taskNameInput.on('keydown', addTask);
 
 // Load existing tasks on page load
 $(document).ready(() => {
+  allTasksEventListener();
+});
+
+// ----- Organize Later -----
+const allTasksToggle = $('#allTasksToggle');
+const activeTasksToggle = $('#activeTasksToggle');
+const completedTasksToggle = $('#completedTasksToggle');
+
+const allTasksEventListener = () => {
+  allTasksToggle.addClass('active');
+  activeTasksToggle.removeClass('active');
+  completedTasksToggle.removeClass('active');
+  taskList.empty();
   ajaxRequest({
     type: 'GET',
     url: `${API_ENDPOINT}?api_key=${API_KEY}`,
@@ -130,4 +143,48 @@ $(document).ready(() => {
     },
     error: handleError,
   });
-});
+};
+
+const activeTasksEventListener = () => {
+  allTasksToggle.removeClass('active');
+  activeTasksToggle.addClass('active');
+  completedTasksToggle.removeClass('active');
+  taskList.empty();
+  ajaxRequest({
+    type: 'GET',
+    url: `${API_ENDPOINT}?api_key=${API_KEY}`,
+    success: (response) => {
+      response.tasks.forEach((task) => {
+        if (!task.completed) {
+          const taskDiv = createTaskElement(task.content, task.id, task.completed);
+          taskList.append(taskDiv);
+        }
+      });
+    },
+    error: handleError,
+  });
+}
+
+const completedTasksEventListener = () => {
+  allTasksToggle.removeClass('active');
+  activeTasksToggle.removeClass('active');
+  completedTasksToggle.addClass('active');
+  taskList.empty();
+  ajaxRequest({
+    type: 'GET',
+    url: `${API_ENDPOINT}?api_key=${API_KEY}`,
+    success: (response) => {
+      response.tasks.forEach((task) => {
+        if (task.completed) {
+          const taskDiv = createTaskElement(task.content, task.id, task.completed);
+          taskList.append(taskDiv);
+        }
+      });
+    },
+    error: handleError,
+  });
+}
+
+allTasksToggle.on('click', allTasksEventListener);
+activeTasksToggle.on('click', activeTasksEventListener);
+completedTasksToggle.on('click', completedTasksEventListener);

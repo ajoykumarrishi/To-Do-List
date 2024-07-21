@@ -3,6 +3,19 @@ body {
   color: #eee;
 }
 
+/* Toggle Styling */
+.toggle .btn {
+  flex: 1;
+  margin: 0 5px;
+}
+
+.btn-primary.active,
+.btn-check:checked+.btn-primary,
+.btn-primary:active {
+  background-color: #FF7F50;
+  border-color: #FF7F50;
+}
+
 /* Container Styling */
 .container-fluid {
   max-width: 800px;
@@ -87,7 +100,7 @@ ul {
 }
 
 .custom-checkbox-container input:checked~.custom-checkmark {
-  background-color: #007bff;
+  background-color: #FF7F50;
 }
 
 .custom-checkmark:after {
