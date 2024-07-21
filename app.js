@@ -49,10 +49,13 @@ const completeTask = (taskId) => {
 };
 
 const createTaskElement = (task, taskId) => {
-  const taskDiv = $('<div>').attr('id', `taskDiv${taskId}`);
+  const taskDiv = $('<div>').attr('id', `taskDiv${taskId}`).addClass('taskDiv');
   const taskContent = $('<li>').text(task).attr('id', 'taskContent');
   const deleteButton = $('<button>').text('Delete').attr('id', 'deleteButton').addClass('btn btn-danger');
-  const completeButton = $('<input type="checkbox">').attr('id', 'completeButton');
+  const completeButton = $('<label>').addClass('custom-checkbox-container');
+  const checkboxInput = $('<input>').attr('type', 'checkbox').attr('id', `completeButton${taskId}`);
+  const checkmarkSpan = $('<span>').addClass('custom-checkmark');
+  completeButton.append(checkboxInput, checkmarkSpan);
 
   completeButton.on('click', () => completeTask(taskId));
   deleteButton.on('click', () => deleteTask(taskId));
